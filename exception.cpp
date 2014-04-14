@@ -40,13 +40,13 @@ void Exceptions::determineError(string errorName) {
 		errorID = 12;
 	} else if (errorName.compare("Cannot multiply logarithms") == 0) {
 		errorID = 13;
-	}else if (errorName.compare("Adding integer for non integer, will provide implementation for fractions once they exist") == 0) {
+	}else if (errorName.compare("Integer Class: Adding non-integer") == 0) {
 		errorID = 14;
-	} else if (errorName.compare("Subbing integer for non integer, will provide implementation for fractions once they exist") == 0) {
+	} else if (errorName.compare("Integer Class: Subtracting non-integer") == 0) {
 		errorID = 15;
-	} else if (errorName.compare("Dividing integer for non integer, will provide implementation for fractions once they exist")) {
+	} else if (errorName.compare("Integer Class: Dividing non-integer")) {
 		errorID = 16;
-	} else if (errorName.compare("Multiplying integer by non int") == 0) {
+	} else if (errorName.compare("Integer Class: Multiplying non-integer") == 0) {
 		errorID = 17;
 	} else if (errorName.compare("Create the reciprocal") == 0) {
 		errorID = 18;
@@ -68,7 +68,15 @@ void Exceptions::determineError(string errorName) {
 		errorID = 25;
 	} else if (errorName.compare("Exponent Class: evaluable exponent with MathExInteger base and MathExInteger power") == 0) {
 		errorID = 26;
-	} else {
+	} else if (errorName.compare("Exponent::add(Expression*) : add math expression to exponent") == 0) {
+        errorID = 27;
+	} else if (errorName.compare("Exponent::subtract(Expression*) : subtract math expression from exponent") == 0) {
+        errorID = 28;
+    } else if (errorName.compare("Exponent::multiply(Expression*) : multiply math expression to exponent") == 0) {
+        errorID = 29;
+    } else if (errorName.compare("Exponent::divide(Expression*) : divide math expression from exponent") == 0) {
+        errorID = 30;
+    } else {
 		errorID = 0;
 	}
 
