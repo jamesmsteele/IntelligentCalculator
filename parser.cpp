@@ -444,7 +444,7 @@ Expression Parser::calculateFromRpn(std::string input) {
                                 Expression* subexp = new Expression(expression2.back());
                                 subexp->subtract(expression1.back());
                                 subexp->simplify();
-                                expStack.push(addexp);
+                                expStack.push(subexp);
                                 break;
                             }
                         }
