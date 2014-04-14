@@ -91,7 +91,7 @@ void Expression::exponentiate(Expression* exponent){
 	*/
 	throw "Use exponent class instead";
 }
-void Expression::add_simplify(std::vector<Expression*> exp){
+void Expression::add_simplify(){
 	/*
 		Ideally, we wouldn't go through this vector linearly,
 		but it's unlikely that the size is very large, so it shouldn't be that bad.
@@ -100,28 +100,28 @@ void Expression::add_simplify(std::vector<Expression*> exp){
 		We seek through our vector and add anything together that can be added together.
 		For example, [5, log_5:10, 10] would become [15, log_5:10].
 	*/
-	int c	=	exp.size();
+	int c	=	this->addition.size();
 	for(int i = 0; i < c; i++){
 		for(int j = 0; j < c; j++){
 			try{
-				exp[i]->add(exp[j]);
-				exp.erase(exp.begin()+j);
+				this->addition[i]->add(this->addition[j]);
+				this->addition.erase(this->addition.begin()+j);
 			}catch(Exceptions e){
-				continue;
+				cout << e.whatString() << endl;
 			}
 		}
 	}
 }
-void Expression::multiply_simplify(std::vector<Expression*> exp){
+void Expression::multiply_simplify(){
 	/*
 		Just like the add_simplify() method, except with multiplication.
 	*/
-	int c	=	exp.size();
+	int c	=	this->multiplication.size();
 	for(int i = 0; i < c; i++){
 		for(int j = 0; j < c; j++){
 			try{
-				exp[i]->multiply(exp[j]);
-				exp.erase(exp.begin()+j);
+				this->multiplication[i]->multiply(this->multiplication[j]);
+				this->multiplication.erase(this->multiplication.begin()+j);
 			}catch(Exceptions e){
 				continue;
 			}
