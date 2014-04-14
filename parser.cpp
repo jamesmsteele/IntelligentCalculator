@@ -417,6 +417,7 @@ Expression Parser::calculateFromRpn(std::string input) {
                             expStack.push(expression1.back());
                         } catch (Exceptions e) {
                             int error = e.what();
+                            cout << e.whatString() << endl;
                             switch (error) {
                             case 14:
                             case 7:
@@ -430,17 +431,61 @@ Expression Parser::calculateFromRpn(std::string input) {
                         }
 						break;
 					case '-':
-						expression2.back()->subtract(expression1.back());
-						expStack.push(expression2.back());
+						try {
+                            expression2.back()->subtract(expression1.back());
+                            expStack.push(expression2.back());
+                        } catch (Exceptions e) {
+                            int error = e.what();
+                            cout << e.whatString() << endl;
+                            switch (error) {
+                            case 15:
+                            case 8:
+                            case 28:
+                                Expression* subexp = new Expression(expression2.back());
+                                subexp->subtract(expression1.back());
+                                subexp->simplify();
+                                expStack.push(addexp);
+                                break;
+                            }
+                        }
 						break;
 					case '*':
-						expression1.back()->multiply(expression2.back());
-						expStack.push(expression1.back());
+						try {
+                            expression2.back()->multiply(expression1.back());
+                            expStack.push(expression2.back());
+                        } catch (Exceptions e) {
+                            int error = e.what();
+                            cout << e.whatString() << endl;
+                            switch (error) {
+                            case 17:
+                            case 10:
+                            case 29:
+                                Expression* mulexp = new Expression(expression2.back());
+                                mulexp->multiply(expression1.back());
+                                mulexp->simplify();
+                                expStack.push(mulexp);
+                                break;
+                            }
+                        }
 						break;
 					case '/':
-						expression2.back()->divide(expression1.back());
-						expStack.push(expression1.back());
-						break;
+						try {
+                            expression2.back()->divide(expression1.back());
+                            expStack.push(expression2.back());
+                        } catch (Exceptions e) {
+                            int error = e.what();
+                            cout << e.whatString() << endl;
+                            switch (error) {
+                            case 16:
+                            case 9:
+                            case 30:
+                                Expression* divexp = new Expression(expression2.back());
+                                divexp->divide(expression1.back());
+                                divexp->simplify();
+                                expStack.push(divexp);
+                                break;
+                            }
+                        }
 					case '^':
 						Expression* base	=	new Expression(expression2.back());
 						Expression* exp		=	new Expression(expression1.back());
