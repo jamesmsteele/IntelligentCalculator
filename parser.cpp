@@ -521,91 +521,171 @@ Expression Parser::calculateFromRpn(std::string input) {
 				std::cout<<"A:"<<expression1.back()->toString()<<" "<<input[j]<<" B:"<<expression2.back()->toString()<<endl;
 
 				switch(input[j]){
-					case '+':
-						try {
+										case '+':
+						/*
+							If we encounter a plus sign, let's try to add our expressions together
+						*/
+						try{
                             expression1.back()->add(expression2.back());
                             expStack.push(expression1.back());
-                        } catch (Exceptions e) {
-                            int error = e.what();
-                            cout << e.whatString() << endl;
-                            switch (error) {
-                            case 14:
-                            case 7:
-                            case 27:
-                                Expression* addexp = new Expression(expression1.back());
-                                addexp->add(expression2.back());
-                                cout << addexp->toString() << endl;
-                                addexp->simplify();
-                                cout << addexp->toString() << endl;
-                                expStack.push(addexp);
-                                break;
+                        }catch(Exceptions e){
+						/*
+							Because the world isn't perfect, there are a lot of cases where they can't be added
+							To solve this, we'll create an instance of the Expression class with the left
+							operand and add the right operand to it, then push it onto our expression stack.
+						*/
+                            int error	=	e.what();
+
+                            switch(error){
+								case 7:		// Exp + Log
+								case 14:	// Exp + Int
+								case 27:	// Exp + Expo
+								case 36:	// Exp + Frac
+								case 37:	// Exp + Const
+									Expression* addexp	=	new Expression(expression2.back());
+									addexp->add(expression1.back());
+									addexp->simplify();
+									expStack.push(addexp);
+									break;
                             }
                         }
 						break;
 					case '-':
-						try {
+						/*
+							Subtraction is pretty similar to addition, just with some different method names and slightly different errors
+						*/
+						try{
                             expression2.back()->subtract(expression1.back());
                             expStack.push(expression2.back());
-                        } catch (Exceptions e) {
-                            int error = e.what();
-                            cout << e.whatString() << endl;
-                            switch (error) {
-                            case 15:
-                            case 8:
-                            case 28:
-                                Expression* subexp = new Expression(expression2.back());
-                                subexp->subtract(expression1.back());
-                                subexp->simplify();
-                                cout << subexp->toString() << endl;
-                                expStack.push(subexp);
-                                break;
+                        }catch(Exceptions e){
+                            int error	=	e.what();
+
+                            switch(error){
+								case 8:
+								case 15:
+								case 28:
+								case 38:
+									Expression* subexp	=	new Expression(expression2.back());
+									subexp->subtract(expression1.back());
+									subexp->simplify();
+									expStack.push(subexp);
+									break;
                             }
                         }
 						break;
 					case '*':
-						try {
+						/*
+							Multiplication is simply as well.
+						*/
+						try{
                             expression2.back()->multiply(expression1.back());
                             expStack.push(expression2.back());
-                        } catch (Exceptions e) {
-                            int error = e.what();
+                        }catch(Exceptions e){
+                            int error	=	e.what();
                             cout << e.whatString() << endl;
-                            switch (error) {
-                            case 17:
-                            case 10:
-                            case 29:
-                                Expression* mulexp = new Expression(expression2.back());
-                                mulexp->multiply(expression1.back());
-                                mulexp->simplify();
-                                cout << mulexp->toString() << endl;
-                                expStack.push(mulexp);
-                                break;
+                            switch(error){
+								case 10:
+								case 13:
+								case 17:
+								case 29:
+								case 39:
+									Expression* mulexp	=	new Expression(expression2.back());
+									mulexp->multiply(expression1.back());
+									mulexp->simplify();
+									expStack.push(mulexp);
+									break;
+								/*
+									We do have one special case, though, where we multiply two constants together, ie pi * pi, which should yield pi^2
+								*/
+								case 41:{
+									MathExInteger* two	=	new MathExInteger(2);
+									Exponent* expo		=	new Exponent(expression2.back(), two);
+									expStack.push(expo);
+								}
                             }
                         }
 						break;
 					case '/':
-						try {
+					/*
+						There are lots of special cases here, so we'll go through each of them
+					*/
+						try{
                             expression2.back()->divide(expression1.back());
                             expStack.push(expression2.back());
-                        } catch (Exceptions e) {
+                        }catch(Exceptions e){
                             int error = e.what();
-                            cout << e.whatString() << endl;
-                            switch (error) {
-                            case 16:
-                            case 9:
-                            case 30:
-                                Expression* divexp = new Expression(expression2.back());
-                                divexp->divide(expression1.back());
-                                divexp->simplify();
-                                expStack.push(divexp);
-                                break;
+
+                            switch(error){	// Expression2/Expression1
+								case 9:		// Log/Exp
+								case 16:	// Int/Exp
+								case 30:	// Expo/Exp
+								case 40:	// Const/Exp
+									try{
+										Fraction* frac	=	new Fraction(expression2.back(), expression1.back());
+										expStack.push(frac);
+									}catch(Exceptions e){
+										/*
+											This is where the magic happens
+										*/
+										switch(e.what()){
+											case 1: //	Dividing by zero
+												throw "Invalid input";
+												break;
+										}
+									}
+									break;
+								case 42:	// Const/Const = Coeff/Coeff
+									try{
+										Fraction* frac	=	new Fraction(expression2.back()->getCoefficient(), expression1.back()->getCoefficient());
+										expStack.push(frac);
+									}catch(Exceptions e){
+										switch(e.what()){
+											case 1: //	Dividing by zero
+												throw "Invalid input";
+												break;
+											case 32: //	Switch log bases
+												Logarithm* l	=	new Logarithm(expression1.back()->getCoefficient(), expression1.back()->getArgument(), expression1.back()->getBase());
+												expStack.push(l);
+												break;
+										}
+									}
+									break;
                             }
                         }
 					case '^':
-						Expression* base	=	new Expression(expression2.back());
-						Expression* exp		=	new Expression(expression1.back());
 						Expression* one		=	new MathExInteger(1);
-						Exponent* expo		=	new Exponent(one, base, exp);
-						expStack.push(expo);
+						Expression* zero	=	new MathExInteger(0);
+						try{
+							Exponent* expo		=	new Exponent(one, expression2.back(), expression1.back());
+							expStack.push(expo);
+						}catch(Exceptions e){
+							switch(e.what()){
+								case 20: // negative exponent
+									Exponent* expo		=	new Exponent(one, expression2.back(), expression1.back()->negative());
+									Fraction* frac		=	new Fraction(one, expo);
+									expStack.push(frac);
+									break;
+								case 21: // Power of 0
+									expStack.push(one);
+									break;
+								case 22: // Power of 1
+									expStack.push(expression2.back());
+									break;
+								case 23: // Base of 0
+									expStack.push(zero);
+									break;
+								case 24:
+									throw "Invalid input";
+									break;
+								case 25: // Log power with matching base
+									expStack.push(expression1.back()->getArgument());
+									break;
+								case 26: // Integer powers and bases
+									MathExInteger* m	=	new MathExInteger(pow(expression2.back()->toDecimal(), expression1.back()->toDecimal()) + .5);
+									expStack.push(m);
+									break;
+							}
+						}
 						break;
 					}
 				j++;
