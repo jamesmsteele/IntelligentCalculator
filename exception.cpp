@@ -76,6 +76,30 @@ void Exceptions::determineError(string errorName) {
         errorID = 29;
     } else if (errorName.compare("Exponent::divide(Expression*) : divide math expression from exponent") == 0) {
         errorID = 30;
+    } else if (errorName.compare("Exponent::add(Exponent*) : add exponent to exponent") == 0) {
+        errorID = 31;
+    } else if (errorName.compare("Logarithm base switch") == 0) {
+        errorID = 32;
+    } else if (errorName.compare("Cannot have a root in a denominator") == 0) {
+        errorID = 33;
+    } else if (errorName.compare("Trying to get GCD of non-integer") == 0) {
+        errorID = 34;
+    } else if (errorName.compare("Denominator is equal to 1, don't need fraction") == 0) {
+        errorID = 35;
+    } else if (errorName.compare("Fraction cannot add that type.") == 0) {
+        errorID = 36;
+    } else if (errorName.compare("Cannot add constants with expressions") == 0) {
+        errorID = 37;
+    } else if (errorName.compare("Cannot subtract expressions from constants") == 0) {
+        errorID = 38;
+    } else if (errorName.compare("Cannot multiply constants by expressions") == 0) {
+        errorID = 39;
+    } else if (errorName.compare("Cannot divide constants by expressions") == 0) {
+        errorID = 40;
+    } else if (errorName.compare("Cannot multiply constants") == 0) {
+        errorID = 41;
+    } else if (errorName.compare("Cannot divide constants") == 0) {
+        errorID = 42;
     } else {
 		errorID = 0;
 	}
