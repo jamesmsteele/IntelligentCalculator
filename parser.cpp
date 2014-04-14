@@ -98,13 +98,13 @@ int Parser::getNumberOfCharacters(int numberOfCharacters, int prelen, int positi
 }
 
 Expression Parser::calculateFromRpn(std::string input) {
-	cout << "input" << input << endl;
+	cout << "input: " << input << endl;
 	unsigned int j				=	0;
 	unsigned int inputLength	=	this->input.length();
 	int numberOfDigits			=	0;
 	expressionStack expStack;
 
-	while (j < this->input.length()){
+	while (j < input.length()){
 		/*
 			Let's check if our value is a single number
 			We also check if the previous character is an underscore, which indicates that it's the b in log_b:a
@@ -128,13 +128,13 @@ Expression Parser::calculateFromRpn(std::string input) {
 			std::string number	=	input.substr(j, numberOfDigits + 1);
 
 			/*
-				If our number is negative, let's add a negative sign in from of it
+				If our number is negative, let's add a negative sign in front of it
 			*/
 			if(input[j-1] == '-'){
 				number	=	"-" + number;
 			}
 
-			std::cout << number << endl;
+			std::cout << "Numdetect: " << number << endl;
 
 			/*
 				Our number is currently a string, so let's use atoi to cast it as an int, then dump it into a MathExInt object
@@ -145,20 +145,22 @@ Expression Parser::calculateFromRpn(std::string input) {
 			/*
 				Now we can push our integer onto our expression stack
 			*/
+			std::cout << "NUM: " + num->toString() << endl;
 			expStack.push(num);
+			std::cout << "NUM: " + expStack.getTop()->toString() << endl;
 
 			/*
 				Finally, we can increment j by the number of digits we've encountered
 			*/
 			j += numberOfDigits + 1;
-			printf("Input %u\n", j);
+			std::cout << "Inputj: " << j << endl;
 		}
-
-		/*
-			If we encounter a space, we can just jump right over it
-		*/
 		else if(input[j] == ' '){
+            /*
+                If we encounter a space, we can just jump right over it
+            */
 			j++;
+			std::cout << "Inputj: " << j << endl;
 		}
 		/*
 			substr(j, 5) gets the next 5 characters in our input string
@@ -345,6 +347,7 @@ Expression Parser::calculateFromRpn(std::string input) {
 
 			try{
 				Logarithm* result				=	new Logarithm(newCoefficient, newBase, newArg);
+				cout<<"I PUSH THAT SHIT"<<endl;
 				expStack.push(result);
 			}catch(Exceptions e){
 				int error	=	e.what();
@@ -373,8 +376,9 @@ Expression Parser::calculateFromRpn(std::string input) {
 					}
 				}
 			}
-			j								+=	numberOfDigits + 6;
+			j  +=	numberOfDigits + 7;
 		}else{
+		    std::cout<< "LOOKIN FOR OPERATORS SIR" << endl;
 			/*
 				Let's see if we're dealing with a negative number
 			*/
@@ -387,31 +391,47 @@ Expression Parser::calculateFromRpn(std::string input) {
 				std::vector<Expression*> expression1;
 				std::vector<Expression*> expression2;
 				try {
+				    cout<<"POP AND LOCK"<<endl;
 					expression1.push_back(expStack.pop());
+					expStack.post_pop();
 				}
 				catch (const char* e) {
 					throw e;
 				}
 
 				try {
+				    cout<<"POP AND LOCK 2: THE RECKONING"<<endl;
 					expression2.push_back(expStack.pop());
+					expStack.post_pop();
 				}
 				catch (const char* e) {
 					throw e;
 				}
 
-				std::cout<<"A:"<<expression1.back()->toString()<<" "<<input[j]<<" B:"<<expression2.back()->toString()<<endl;;
+				std::cout<<"A:"<<expression1.back()->toString()<<" "<<input[j]<<" B:"<<expression2.back()->toString()<<endl;
 
 				switch(input[j]){
 					case '+':
-						std::cout << "adding detected" << endl;
-						cout << "decibad" << expression2.back()->getName() << endl;
-						expression1.back()->add(expression2.back());
-						expStack.push(expression1.back());
+						try {
+                            expression1.back()->add(expression2.back());
+                            expStack.push(expression1.back());
+                        } catch (Exceptions e) {
+                            int error = e.what();
+                            switch (error) {
+                            case 14:
+                            case 7:
+                            case 27:
+                                Expression* addexp = new Expression(expression2.back());
+                                addexp->add(expression1.back());
+                                addexp->simplify();
+                                expStack.push(addexp);
+                                break;
+                            }
+                        }
 						break;
 					case '-':
 						expression2.back()->subtract(expression1.back());
-						expStack.push(expression1.back());
+						expStack.push(expression2.back());
 						break;
 					case '*':
 						expression1.back()->multiply(expression2.back());
@@ -433,7 +453,7 @@ Expression Parser::calculateFromRpn(std::string input) {
 			}
 		}
 	}
-	std::cout<<expStack.getTop()->toString()<<endl;
+	std::cout<<"Top: "<<expStack.getTop()->toString()<<endl;
 	return expStack.getTop();
 }
 
