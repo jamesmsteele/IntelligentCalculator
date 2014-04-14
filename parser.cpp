@@ -107,11 +107,21 @@ Expression Parser::calculateFromRpn(std::string input) {
 	expressionStack expStack;
 
 	while (j < input.length()){
+		if ((input.substr(j,2)).compare("pi") == 0) {
+            Pi* pipi = new Pi();
+            expStack.push(pipi);
+            j += 2;
+		}
+		else if ((input.substr(j,1)).compare("e") == 0) {
+            Eulers* ee = new Eulers();
+            expStack.push(ee);
+            j++;
+		}
 		/*
 			Let's check if our value is a single number
 			We also check if the previous character is an underscore, which indicates that it's the b in log_b:a
 		*/
-		if(isdigit(input[j]) && input[j - 1] != '_' && input[j + 1] != 'r' && input[j + 1] != 'R'){
+		else if(isdigit(input[j]) && input[j - 1] != '_' && input[j + 1] != 'r' && input[j + 1] != 'R'){
 			/*
 				We'll use this variable to track the length of this expression so that we can skip ahead to the next one when we're done
 			*/
@@ -808,12 +818,112 @@ std::string Parser::shunting_yard(std::string input) { //CODED BY OURSELVES NO C
             }
             sh_stack.push(input.substr(i, 6));
             i+=6;
+        } else if((input.substr(i, 6)).compare("log_e:") == 0){
+            //log_b:x
+            int num_chars	=	0;
+            if(input[i + 6] != '(' && input[i + 7] != '('){ //not a log_b:(x+y) expression
+                while(input[i + num_chars + 1] != ' ' && input[i + num_chars + 1] != ')' && (i + num_chars + 1) < input.length()){ //gets number of digits of nrt, i.e. nrt:xxxx
+                    num_chars++;
+                }
+                output.append(input.substr(i, num_chars + 1));
+                output.append(" ");
+                i	+=	num_chars + 1;
+            }
+            else{ //is log_b:() with parentheses
+                num_chars		=	0;
+                int open_paren	=	1;
+                int close_paren	=	0;
+                int has_space	=	0;
+                if(input[i + 6] == ' '){
+                        std::cout << "found space" << endl;
+                        has_space	=	1;
+				}
+                for(int p = has_space; p < input.length() - i - 7; p++) { //get expression inside parentheses
+                    if((input.substr(i + p + 7, 1)).compare("(") == 0){
+                        open_paren++;
+                        std::cout << "Open:" << open_paren << endl;
+                    }
+                    else if((input.substr(i + p + 7, 1)).compare(")") == 0){
+                        close_paren++;
+                        std::cout << "Closed:" << close_paren << endl;
+                    }
+                    if(close_paren == open_paren){
+                        //exit out
+                        num_chars	=	p;
+                        p			=	input.length() - i;
+                    }
+                }
+                std::cout << input.substr(i + 6, num_chars + 2) << endl;
+                std::string eval	=	parse(input.substr(i + 6, num_chars + 2)); //parse expression inside ( and )
+                std::cout << eval << endl;
+                eval				=	input.substr(i, 6) + eval;
+                std::cout << eval << endl;
+                output.append(eval);
+                output.append(" ");
+                i					+=	num_chars + 8;
+            }
+            sh_stack.push(input.substr(i, 6));
+            i+=6;
+        } else if((input.substr(i, 4)).compare("log_") == 0){
+            //log_b:x
+            int num_chars	=	0;
+            if(input[i + 6] != '(' && input[i + 7] != '('){ //not a log_b:(x+y) expression
+                while(input[i + num_chars + 1] != ' ' && input[i + num_chars + 1] != ')' && (i + num_chars + 1) < input.length()){ //gets number of digits of nrt, i.e. nrt:xxxx
+                    num_chars++;
+                }
+                output.append(input.substr(i, num_chars + 1));
+                output.append(" ");
+                i	+=	num_chars + 1;
+            }
+            else{ //is log_b:() with parentheses
+                num_chars		=	0;
+                int open_paren	=	1;
+                int close_paren	=	0;
+                int has_space	=	0;
+                if(input[i + 6] == ' '){
+                        std::cout << "found space" << endl;
+                        has_space	=	1;
+				}
+                for(int p = has_space; p < input.length() - i - 7; p++) { //get expression inside parentheses
+                    if((input.substr(i + p + 7, 1)).compare("(") == 0){
+                        open_paren++;
+                        std::cout << "Open:" << open_paren << endl;
+                    }
+                    else if((input.substr(i + p + 7, 1)).compare(")") == 0){
+                        close_paren++;
+                        std::cout << "Closed:" << close_paren << endl;
+                    }
+                    if(close_paren == open_paren){
+                        //exit out
+                        num_chars	=	p;
+                        p			=	input.length() - i;
+                    }
+                }
+                std::cout << input.substr(i + 6, num_chars + 2) << endl;
+                std::string eval	=	parse(input.substr(i + 6, num_chars + 2)); //parse expression inside ( and )
+                std::cout << eval << endl;
+                eval				=	input.substr(i, 6) + eval;
+                std::cout << eval << endl;
+                output.append(eval);
+                output.append(" ");
+                i					+=	num_chars + 8;
+            }
+            sh_stack.push(input.substr(i, 6));
+            i+=6;
         }
         else if((input.substr(i, 3)).compare("ans") == 0){
             //user using last ans
             output.append(last_ans);
             output.append(" ");
             i	+=	3;
+        }
+        else if ((input.substr(i,2)).compare("pi") == 0) {
+            output.append("pi ");
+            i += 2;
+        }
+        else if ((input.substr(i,1)).compare("e") == 0) {
+            output.append("e ");
+            i += 1;
         }
         else {
             throw "Invalid expression detected in input. Please try again.";
