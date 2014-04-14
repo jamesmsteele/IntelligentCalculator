@@ -20,6 +20,7 @@ public:
 	void push(Expression* expression){
 		items.push_back(expression);
 		top++;
+		cout<<"pushtop: "<<top<<endl;
 	}
 
 	Expression* pop(){
@@ -36,7 +37,10 @@ public:
 	}
 
 	Expression* getTop() {
-        return items.at(top);
+        if (hasItems()) {
+            return items.at(top);
+        }
+        else {throw "EMPTY";}
 	}
 
 	bool hasItems() {
