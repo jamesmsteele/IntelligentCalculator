@@ -391,7 +391,6 @@ Expression Parser::calculateFromRpn(std::string input) {
 				std::vector<Expression*> expression1;
 				std::vector<Expression*> expression2;
 				try {
-				    cout<<"POP AND LOCK"<<endl;
 					expression1.push_back(expStack.pop());
 					expStack.post_pop();
 				}
@@ -400,14 +399,12 @@ Expression Parser::calculateFromRpn(std::string input) {
 				}
 
 				try {
-				    cout<<"POP AND LOCK 2: THE RECKONING"<<endl;
 					expression2.push_back(expStack.pop());
 					expStack.post_pop();
 				}
 				catch (const char* e) {
 					throw e;
 				}
-
 				std::cout<<"A:"<<expression1.back()->toString()<<" "<<input[j]<<" B:"<<expression2.back()->toString()<<endl;
 
 				switch(input[j]){
