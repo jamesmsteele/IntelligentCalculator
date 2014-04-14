@@ -4,6 +4,8 @@
 #include "exp-integer.h"
 #include "fraction.h"
 #include "exponent.h"
+#include "euler.h"
+#include "pi.h"
 #include <vector>
 #include <ctype.h>
 #include <string>
@@ -211,7 +213,7 @@ Expression Parser::calculateFromRpn(std::string input) {
 				int error	=	e.what();
 				switch(error){
 					case 4:{
-						throw "Invalid expression";
+						throw "Invalid log expression";
 						break;
 					}
 					case 6:{
@@ -321,7 +323,8 @@ Expression Parser::calculateFromRpn(std::string input) {
 		/*
 			Next, let's see if we've found a logarithm
 		*/
-		else if((input.substr(j, 4)).compare("log_") == 0){
+		else if((input.substr(j, 6)).compare("log_e:") == 0){
+			cout << "loge detected" << endl;
 			/*
 				As always, let's find the length of our arguments
 			*/
@@ -335,19 +338,12 @@ Expression Parser::calculateFromRpn(std::string input) {
 			*/
 			int arg					=	atoi((input.substr(j + 6, numberOfDigits + 1)).c_str());
 
-			/*
-				Second, let's find our base
-			*/
-			std::string base_str	=	input.substr(j + 4, 1);
-			int base				=	atoi(base_str.c_str());
-
 			MathExInteger* newCoefficient	=	new MathExInteger(1);
-			MathExInteger* newBase			=	new MathExInteger(base);
+			Eulers* newBase			        =	new Eulers();
 			MathExInteger* newArg			=	new MathExInteger(arg);
 
 			try{
 				Logarithm* result				=	new Logarithm(newCoefficient, newBase, newArg);
-				cout<<"I PUSH THAT SHIT"<<endl;
 				expStack.push(result);
 			}catch(Exceptions e){
 				int error	=	e.what();
@@ -377,7 +373,114 @@ Expression Parser::calculateFromRpn(std::string input) {
 				}
 			}
 			j  +=	numberOfDigits + 7;
-		}else{
+		}  else if((input.substr(j, 7)).compare("log_pi:") == 0){
+			cout << "logpi detected" << endl;
+			/*
+				As always, let's find the length of our arguments
+			*/
+			numberOfDigits = 0;
+			while (isdigit(input[j+numberOfDigits+7])) {
+				numberOfDigits++;
+			}
+
+			/*
+				First, let's find our argument
+			*/
+			int arg					=	atoi((input.substr(j + 6, numberOfDigits + 1)).c_str());
+
+			MathExInteger* newCoefficient	=	new MathExInteger(1);
+			Pi* newBase			            =	new Pi();
+			MathExInteger* newArg			=	new MathExInteger(arg);
+
+			try{
+				Logarithm* result				=	new Logarithm(newCoefficient, newBase, newArg);
+				expStack.push(result);
+			}catch(Exceptions e){
+				int error	=	e.what();
+
+				switch(error){
+					case 4:{
+						throw "Invalid expression";
+						break;
+					}
+					case 5:{
+						throw "Invalid expression";
+						break;
+					}
+					case 6:{
+						MathExInteger* case6	=	new MathExInteger(0);
+						case6->multiply(newCoefficient);
+						expStack.push(case6);
+						break;
+					}
+					case 12:{
+						MathExInteger* case12	=
+							new MathExInteger(log10(newArg->toDecimal())/log10(newBase->toDecimal()));
+						case12->multiply(newCoefficient);
+						expStack.push(case12);
+						break;
+					}
+				}
+			}
+			j  +=	numberOfDigits + 8;
+		} else if((input.substr(j, 4)).compare("log_") == 0){
+			std::cout << "log detected" << endl;
+			/*
+				As always, let's find the length of our arguments
+			*/
+			numberOfDigits = 0;
+			while (isdigit(input[j+numberOfDigits+7])) {
+				numberOfDigits++;
+			}
+
+			/*
+				First, let's find our argument
+			*/
+			int arg					=	atoi((input.substr(j + 6, numberOfDigits + 1)).c_str());
+
+			/*
+				Second, let's find our base
+			*/
+			std::string base_str	=	input.substr(j + 4, 1);
+			int base				=	atoi(base_str.c_str());
+
+			MathExInteger* newCoefficient	=	new MathExInteger(1);
+			MathExInteger* newBase			=	new MathExInteger(base);
+			MathExInteger* newArg			=	new MathExInteger(arg);
+
+			try{
+				Logarithm* result				=	new Logarithm(newCoefficient, newBase, newArg);
+				expStack.push(result);
+			}catch(Exceptions e){
+				int error	=	e.what();
+
+				switch(error){
+					case 4:{
+						throw "Invalid expression";
+						break;
+					}
+					case 5:{
+						throw "Invalid expression";
+						break;
+					}
+					case 6:{
+						MathExInteger* case6	=	new MathExInteger(0);
+						case6->multiply(newCoefficient);
+						expStack.push(case6);
+						break;
+					}
+					case 12:{
+						MathExInteger* case12	=
+							new MathExInteger(log10(newArg->toDecimal())/log10(newBase->toDecimal()));
+						case12->multiply(newCoefficient);
+						expStack.push(case12);
+						break;
+					}
+				}
+			}
+			j  +=	numberOfDigits + 7;
+		}
+		else{
 		    std::cout<< "LOOKIN FOR OPERATORS SIR" << endl;
 			/*
 				Let's see if we're dealing with a negative number
@@ -419,9 +522,11 @@ Expression Parser::calculateFromRpn(std::string input) {
                             case 14:
                             case 7:
                             case 27:
-                                Expression* addexp = new Expression(expression2.back());
-                                addexp->add(expression1.back());
+                                Expression* addexp = new Expression(expression1.back());
+                                addexp->add(expression2.back());
+                                cout << addexp->toString() << endl;
                                 addexp->simplify();
+                                cout << addexp->toString() << endl;
                                 expStack.push(addexp);
                                 break;
                             }
@@ -441,6 +546,7 @@ Expression Parser::calculateFromRpn(std::string input) {
                                 Expression* subexp = new Expression(expression2.back());
                                 subexp->subtract(expression1.back());
                                 subexp->simplify();
+                                cout << subexp->toString() << endl;
                                 expStack.push(subexp);
                                 break;
                             }
@@ -460,6 +566,7 @@ Expression Parser::calculateFromRpn(std::string input) {
                                 Expression* mulexp = new Expression(expression2.back());
                                 mulexp->multiply(expression1.back());
                                 mulexp->simplify();
+                                cout << mulexp->toString() << endl;
                                 expStack.push(mulexp);
                                 break;
                             }
