@@ -19,7 +19,10 @@ public:
     void subtract(Pi* s);
     void subtract(Expression* s);
     void multiply(Expression* m);
-    void divide(Expression* d);
+    void multiply(Expression* m);
+    void divide(Pi* d);
+    void multiply(Pi* m);
+    void negative();
 
     std::string getName();
     std::string toString();
