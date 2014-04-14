@@ -11,8 +11,8 @@ class Expression{
 		bool initialized;
 		std::vector<Expression*> addition;
 		std::vector<Expression*> multiplication;
-		void add_simplify(std::vector<Expression*>);
-		void multiply_simplify(std::vector<Expression*>);
+		void add_simplify();
+		void multiply_simplify();
 
 	public:
 		Expression(Expression*);
