@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #include <iostream>
 #include <vector>
 #include "expression.h"
@@ -24,11 +25,15 @@ public:
 
 	Expression* pop(){
 		if (isEmpty()){
-			throw "Error with input! Operator to term ratio does not match up.";
+			throw "Error wHAHAHHAHAith input! Operator to term ratio does not match up.";
 		}
         else {
             return items.at(top--);
         }
+	}
+
+	void post_pop() {
+        items.pop_back();
 	}
 
 	Expression* getTop() {
