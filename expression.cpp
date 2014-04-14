@@ -1,295 +1,222 @@
-#include "Exponent.h"
-#include <stdio.h>
+#include <vector>
+#include "expression.h"
 
-Exponent::Exponent(Expression* coefficient, Expression* base, Expression* power){
-	if(power->toDecimal() < 0){
-		throw Exceptions("Exponent Class: power < 0, convert to fraction");
-	}
-
-	if(power->toDecimal() == 0){
-		throw Exceptions("Exponent Class: power = 0, convert to 1");
-	}
-
-	if(power->toDecimal() == 1){
-		throw Exceptions("Exponent Class: power == 1, convert to integer");
-	}
-
-	if(base->toDecimal() == 0){
-		throw Exceptions("Exponent Class: base == 0, convert to 0");
-	}
-
-	if(base->toDecimal() == 1){
-		throw Exceptions("Exponent Class: base == 1, convert to 1");
-	}
-
-	if((base->toDecimal() == 0) && (power->toDecimal() == 0)){
-		throw Exceptions("Exponent Class: Entire expression is undefined");
-	}
-
-	if(abs(pow(base->toDecimal(),power->toDecimal()) - floor(pow(base->toDecimal(),power->toDecimal()))) <= .001){
-		throw Exceptions("Exponent Class: evaluable exponent with MathExInteger base and MathExInteger power");
-	}
-
-	this->coefficient.push_back(coefficient);
-	this->base.push_back(base);
-	this->power.push_back(power);
+Expression::Expression(Expression* exp){
+	/*
+		If we only want to add one expression, we'll set value equal to the expression and set initialized to false.
+		This will tell our other methods to move value to the first slot of the appropriate vector.
+	*/
+	this->value	=	exp;
+	this->initialized	=	false;
 }
-
-Exponent::Exponent(Expression* coefficient, Expression* base, Logarithm* power){
-	if(power->toDecimal() < 0){
-		throw Exceptions("Exponent Class: power < 0, convert to fraction");
+Expression::Expression(){
+	/*
+		If we want to create an empty expression, we'll set initialized to true to indicate that value doesn't need
+		to be placed in the first slot of a vector when add() or multiply() is called.
+	*/
+	this->initialized	=	true;
+}
+Expression::Expression(std::vector<Expression*> addition){
+	/*
+		In some cases, we'll want to accept an addition vector, which allows us to multiply. More information will be
+		in our multiply() method.
+	*/
+	this->initialized	=	true;
+	this->addition		=	addition;
+}
+void Expression::add(Expression* addend){
+	/*
+		If initialized is true, we don't need to worry about the value variable.
+	*/
+	if(this->initialized){
+		this->addition.push_back(addend);
 	}
-
-	if(power->toDecimal() == 0){
-		throw Exceptions("Exponent Class: power = 0, convert to 1");
-	}
-
-	if(power->toDecimal() == 1){
-		throw Exceptions("Exponent Class: power == 1, convert to integer");
-	}
-
-	if(base->toDecimal() == 0){
-		throw Exceptions("Exponent Class: base == 0, convert to 0");
-	}
-
-	if(base->toDecimal() == 1){
-		throw Exceptions("Exponent Class: base == 1, convert to 1");
-	}
-
-	if((base->toDecimal() == 0) && (power->toDecimal() == 0)){
-		throw Exceptions("Exponent Class: Entire expression is undefined");
-	}
-
-	if (base->toDecimal() == power->getBase()->toDecimal()){
-		throw Exceptions("Exponent Class: evaluable exponent with expression base and logarithm power");
-	}
-
-	if(abs(pow(base->toDecimal(),power->toDecimal()) - floor(pow(base->toDecimal(),power->toDecimal()))) <= .001){
-		throw Exceptions("Exponent Class: evaluable exponent with MathExInteger base and MathExInteger power");
+	/*
+		Otherwise, we need to set it to true, put it in our addition vector, then conduct business as usual.
+	*/
+	else{
+		this->initialized	=	true;
+		this->addition.push_back(value);
+		this->addition.push_back(addend);
 	}
 }
-
-
-Exponent::Exponent(Expression* coefficient, MathExInteger* base, MathExInteger* power){
-	if(power->toDecimal() < 0){
-		throw Exceptions("Exponent Class: power < 0, convert to fraction");
-	}
-
-	if(power->toDecimal() == 0){
-		throw Exceptions("Exponent Class: power = 0, convert to 1");
-	}
-
-	if(power->toDecimal() == 1){
-		throw Exceptions("Exponent Class: power == 1, convert to integer");
-	}
-
-	if(base->toDecimal() == 0){
-		throw Exceptions("Exponent Class: base == 0, convert to 0");
-	}
-
-	if(base->toDecimal() == 1){
-		throw Exceptions("Exponent Class: base == 1, convert to 1");
-	}
-
-	if((base->toDecimal() == 0) && (power->toDecimal() == 0)){
-		throw Exceptions("Exponent Class: Entire expression is undefined");
-	}
-
-	if(abs(pow(base->toDecimal(),power->toDecimal()) - floor(pow(base->toDecimal(),power->toDecimal()))) <=.001){
-		throw Exceptions("Exponent Class: evaluable exponent with MathExInteger base and MathExInteger power");
-	}
-
-	//Should not get to this point because the exponent should always be evaluable since base and power are of type MathExInteger
-	this->coefficient.push_back(coefficient);
-	this->base.push_back(base);
-	this->power.push_back(power);
+void Expression::subtract(Expression* subtrahend){
+	/*
+		We call negative() on our subtrahend so that we can add it to our addition vector.
+		This allows us to avoid having a vector just for subtraction, which makes our lives a lot easier.
+	*/
+	subtrahend->negative();
+	this->add(subtrahend);
 }
-
-Exponent::Exponent(Expression* coefficient, Expression* base, Fraction* power){
-	if(power->toDecimal() < 0){
-		throw Exceptions("Exponent Class: power < 0, convert to fraction");
+void Expression::multiply(Expression* multiplicand){
+	/*
+		Like in the addition method, we have to handle our value variable.
+	*/
+	if(!this->initialized){
+		this->initialized	=	true;
+		this->multiplication.push_back(value);
 	}
-
-	if(power->toDecimal() == 0){
-		throw Exceptions("Exponent Class: power = 0, convert to 1");
+	/*
+		If our expression has an addition vector, we need to put it in our multiplication vector.
+		For example, if we multiply "log_5:10 +  e^5" by "pi^6", we would take [log_5:10*, e^5*], turn it into
+		an Expression object via the vector constructor, then we'd have a multiplication vector of [[log_5:10*, e^5*], pi^6].
+	*/
+	if(!this->addition.empty()){
+		this->add_simplify();
+		Expression* exp	=	new Expression(this->addition);
+		this->addition.clear();
+		this->multiplication.push_back(exp);
 	}
-
-	if(power->toDecimal() == 1){
-		throw Exceptions("Exponent Class: power == 1, convert to integer");
-	}
-
-	if(base->toDecimal() == 0){
-		throw Exceptions("Exponent Class: base == 0, convert to 0");
-	}
-
-	if(base->toDecimal() == 1){
-		throw Exceptions("Exponent Class: base == 1, convert to 1");
-	}
-
-	if((base->toDecimal() == 0) && (power->toDecimal() == 0)){
-		throw Exceptions("Exponent Class: Entire expression is undefined");
-	}
-
-	if(abs(pow(base->toDecimal(), power->toDecimal()) - floor(pow(base->toDecimal(),power->toDecimal()))) <= .001){
-		throw Exceptions("Exponent Class: evaluable exponent with MathExInteger base and MathExInteger power");
-	}
-
-	//Should not get to this point because the exponent should always be evaluable since base and power are of type MathExInteger
-	this->coefficient.push_back(coefficient);
-	this->base.push_back(base);
-	this->power.push_back(power);
+	this->multiplication.push_back(multiplicand);
 }
-
-
-Exponent::~Exponent(){
-	this->base.clear();
-	this->coefficient.clear();
-	this->power.clear();
+void Expression::divide(Expression* dividend){
+	/*
+		Tell the parser to multiply by the reciprocal instead of dividing.
+	*/
+	throw "Create the reciprocal";
 }
-
-Expression* Exponent::getCoefficient(){
-	return this->coefficient.back();
-}
-
-Expression* Exponent::getBase(){
-	return this->base.back();
-}
-
-Expression* Exponent::getPower(){
-	return this->power.back();
-}
-
-void Exponent::add(Expression* addend){
-
-	throw Exceptions("Exponent::add(Expression*) : add math expression to exponent");
-
-}
-
-void Exponent::subtract(Expression* subtrahend){
-	if(this->toDecimal() == subtrahend->toDecimal()){
-		throw Exceptions("Exponent::subtract(Expression*) : subtraction of same values, convert to 0");
-	}
-	else
-	throw Exceptions("Exponent::subtract(Expression*) : subtract math expression from exponent");
-
-}
-
-void Exponent::multiply(Expression* multiplicand){
-
-	throw Exceptions("Exponent::multiply(Expression*) : multiply math expression to exponent");
-
-}
-
-void Exponent::divide(Expression* dividend){
-	throw Exceptions("Exponent::divide(Expression*) : divide math expression from exponent");
-}
-
-void Exponent::add(Exponent* addend){
-	bool sameBase = addend->getBase()->toDecimal() == this->getBase()->toDecimal();
-	bool samePow  = addend->getPower()->toDecimal() == this->getPower()->toDecimal();
-	if(sameBase && samePow){
-		try{
-			this->getCoefficient()->add(addend->getCoefficient());
-		}catch(Exceptions e){
-			Expression* exp2	=	new Expression(this->getCoefficient());
-			exp2->add(addend->getCoefficient());
-			this->coefficient.push_back(exp2);
+void Expression::negative(){
+	if(!this->multiplication.empty()){
+		this->multiplication.back()->negative();
+	}else{
+		int c	=	this->addition.size();
+		for(int i = 0; i < c; i++){
+			this->addition[c]->negative();
 		}
 	}
-	else{
-		throw Exceptions("Exponent::add(Exponent*) : add exponent to exponent");
-	}
 }
-
-void Exponent::subtract(Exponent* subtrahend){
-
-	bool sameCoeff = subtrahend->getCoefficient()->toDecimal() == this->getCoefficient()->toDecimal();
-	bool sameBase = subtrahend->getBase()->toDecimal() == this->getBase()->toDecimal();
-	bool samePow  = subtrahend->getPower()->toDecimal() == this->getPower()->toDecimal();
-
-	if(sameCoeff && sameBase && samePow){
-		throw Exceptions("Exponent::subtract(Exponent*) : subtraction of same exponents, convert to 0");
-	}
-	if(sameBase && samePow){
-		try{
-			this->getCoefficient()->subtract(subtrahend->getCoefficient());
-		}catch(Exceptions e){
-			Expression* exp2	=	new Expression(this->getCoefficient());
-			exp2->subtract(subtrahend->getCoefficient());
-			this->coefficient.push_back(exp2);
+void Expression::exponentiate(Expression* exponent){
+	/*
+		We don't need to handle exponents. It's easier to just do Exponent(Expression, exponent).
+	*/
+	throw "Use exponent class instead";
+}
+void Expression::add_simplify(){
+	/*
+		Ideally, we wouldn't go through this vector linearly,
+		but it's unlikely that the size is very large, so it shouldn't be that bad.
+	*/
+	/*
+		We seek through our vector and add anything together that can be added together.
+		For example, [5, log_5:10, 10] would become [15, log_5:10].
+	*/
+	
+	for(int i = 0; i < this->addition.size(); i++){
+		for(int j = 0; j < this->addition.size(); j++){
+			try{
+				this->addition[i]->add(this->addition[j]);
+				this->addition.erase(this->addition.begin()+j);
+			}catch(Exceptions e){
+				cout << e.whatString() << endl;
+			}
 		}
 	}
-	else{
-		throw Exceptions("Exponent::subtract(Exponent*) : subtract exponent from exponent");
-	}
 }
-
-
-void Exponent::multiply(Exponent* multiplicand){
-	bool sameBase = multiplicand->getBase()->toDecimal() == this->getBase()->toDecimal();
-
-	if(sameBase){
-		try{
-			this->getCoefficient()->multiply(multiplicand->getCoefficient());
-			this->getPower()->add(multiplicand->getPower());
-		}catch(Exceptions e){
-			Expression* exp1	=	new Expression(this->getCoefficient());
-			Expression* exp2	=	new Expression(this->getPower());
-			exp1->multiply(multiplicand->getCoefficient());
-			exp2->add(multiplicand->getPower());
-			this->coefficient.push_back(exp1);
-			this->power.push_back(exp2);
+void Expression::multiply_simplify(){
+	/*
+		Just like the add_simplify() method, except with multiplication.
+	*/
+	int c	=	this->multiplication.size();
+	for(int i = 0; i < this->multiplication.size(); i++){
+		for(int j = 0; j < this->multiplication.size(); j++){
+			try{
+				this->multiplication[i]->multiply(this->multiplication[j]);
+				this->multiplication.erase(this->multiplication.begin()+j);
+			}catch(Exceptions e){
+				continue;
+			}
 		}
 	}
-	else{
-		throw Exceptions("Exponent::multiply(Exponent*) : multiply exponent to exponent");
-	}
-
+}
+void Expression::simplify(){
+	/*
+		Just simplify both vectors and call it a day
+	*/
+	this->add_simplify();
+	this->multiply_simplify();
 }
 
-void Exponent::divide(Exponent* dividend){
-	bool sameBase = dividend->getBase()->toDecimal() == this->getBase()->toDecimal();
+std::string Expression::toString(){
+	/*
+		If we only have our initial value, let's just return it in string form.
+	*/
+	if(!this->initialized){
+		return this->value->toString();
+	}
 
-	if(sameBase){
-		try{
-			this->getCoefficient()->divide(dividend->getCoefficient());
-			this->getPower()->subtract(dividend->getPower());
-		}catch(Exceptions e){
-			Expression* exp1	=	new Expression(this->getCoefficient());
-			Expression* exp2	=	new Expression(this->getPower());
-			exp1->divide(dividend->getCoefficient());
-			exp2->subtract(dividend->getPower());
-			this->coefficient.push_back(exp1);
-			this->power.push_back(exp2);
+	int c	=	this->addition.size();
+	std::string	result	=	"";
+
+	/*
+		Handle addition
+	*/
+	for(int i = 0; i < c; i++){
+		/*
+			If we have multiple addition elements, it's a good idea to wrap them in parentheses.
+		*/
+		if(i == 0 && c > 1){
+			result += "(";
+		}
+		result	+=	this->addition[i]->toString();
+		/*
+			Add an addition symbol after our element as long as it isn't the last one in the vector.
+		*/
+		if(i < (c - 1)){
+			result += " + ";
+		}
+		/*
+			Close the parentheses when we're done.
+		*/
+		if(i == (c - 1) && c > 1){
+			result += ")";
 		}
 	}
-	else{
-		throw Exceptions("Exponent::divide(Exponent*) : divide exponent by exponent");
+
+	/*
+		If we have something to multiply by, put a multiplication symbol in between the two pieces of our string.
+	*/
+	if(!this->multiplication.empty()){
+		result += " * ";
 	}
 
+	c	=	this->multiplication.size();
+
+	for(int i = 0; i < c; i++){
+		result	+=	this->multiplication[i]->toString();
+		if(i < (c - 1)){
+			result += " * ";
+		}
+	}
+	return result;
 }
 
-void Exponent::negative(){
-	this->getCoefficient()->negative();
+double Expression::toDecimal(){
+	this->simplify();
 
+	int c	=	this->multiplication.size();
+	double result	=	0;
+
+	for(int i = 0; i < c; i++){
+		result *= this->multiplication[i]->toDecimal();
+	}
+
+	c	=	this->addition.size();
+	for(int i = 0; i < c; i++){
+		result += this->addition[i]->toDecimal();
+	}
+	return result;
 }
 
-void Exponent::simplify(){
-	//Do nothing
+int Expression::getInt(){
+	// Do nothing
 }
 
-double Exponent::toDecimal(){
-	double exponentVal = pow(this->getBase()->toDecimal(),this->getPower()->toDecimal());
-	exponentVal *= this->getCoefficient()->toDecimal();
-	return exponentVal;
-
+Expression::~Expression(){
+	//this->addition.clear();
+	//this->multiplication.clear();
+	//delete this;
 }
 
-std::string Exponent::toString(){
-	return this->getCoefficient()->toString() + "(" + this->getBase()->toString() + "^" + this->getPower()->toString() + ")";
+std::string Expression::getName(){
+	return "Expression";
 }
-
-std::string Exponent::getName(){
-	return "Exponent";
-}
-
